@@ -1,6 +1,7 @@
 const path = require("path");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
 const MiniCSSExtractPlugin = require("mini-css-extract-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: "./src/index.js",
@@ -35,5 +36,13 @@ module.exports = {
       filename: "index.html",
     }),
     new MiniCSSExtractPlugin({ filename: "styles.css" }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, "licenses.txt"),
+          to: path.resolve(__dirname, "dist"),
+        },
+      ],
+    }),
   ],
 };

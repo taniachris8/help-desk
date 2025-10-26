@@ -1,21 +1,24 @@
 import TicketForm from "./TicketForm";
+import TicketService from "./TicketService";
 import pencil from "../icons/pencil.png";
 
 export default class Ticket {
-  constructor({ id, name, description, status, created }, ticketService) {
+  constructor({ id, name, description, status, created }) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.status = status;
     this.created = created;
 
-    this.ticketService = ticketService;
-
     this.ticket = null;
 
     this.edit = this.edit.bind(this);
     this.delete = this.delete.bind(this);
     this.displayDescription = this.displayDescription.bind(this);
+    this.updateStatus = this.updateStatus.bind(this);
+    this.formatDate = this.formatDate.bind(this);
+
+    this.ticketService = new TicketService();
   }
 
   bindToDOM() {
@@ -29,12 +32,13 @@ export default class Ticket {
         <p class="ticket-name">${this.name}</p>
        </div>
        <div class="right-part">
-       <span class="ticket-date">${this.created}</span>
+       <span class="ticket-date">${this.formatDate()}</span>
        <div class="ticket-btns">
         <button class="edit-btn"><img class="pencil" src=${pencil} alt="edit"></button>
         <button class="delete-btn">&#x2716</button></div>
-        </div></div>
-         <p class="ticket-description">${this.description}</p>
+        </div>
+        </div>
+        ${this.description ? `<p class="ticket-description">${this.description}</p>` : ""}
         `;
 
     container.append(this.ticket);
@@ -42,9 +46,23 @@ export default class Ticket {
     this.editBtn = this.ticket.querySelector(".edit-btn");
     this.deleteBtn = this.ticket.querySelector(".delete-btn");
     this.ticket.addEventListener("click", this.displayDescription);
+    this.checkbox = this.ticket.querySelector(".checkbox");
+    this.checkbox.checked = this.status;
 
     this.editBtn.addEventListener("click", this.edit);
     this.deleteBtn.addEventListener("click", this.delete);
+    this.checkbox.addEventListener("change", this.updateStatus);
+  }
+
+  formatDate() {
+    const date = new Date(this.created);
+    const dateStr = date.toLocaleDateString("ru-RU");
+    const timeStr = date.toLocaleTimeString("ru-RU", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return `${dateStr} ${timeStr}`;
   }
 
   edit() {
@@ -67,17 +85,39 @@ export default class Ticket {
   }
 
   displayDescription(event) {
-    if (this.description) {
-      if (
-        event.target.tagName !== "INPUT" &&
-        event.target.tagName !== "BUTTON" &&
-        event.target.tagName !== "IMG"
-      ) {
-        const ticketDescription = this.ticket.querySelector(
-          ".ticket-description",
-        );
-        ticketDescription.classList.toggle("active");
-      }
+    if (
+      event.target.tagName === "INPUT" ||
+      event.target.tagName === "BUTTON" ||
+      event.target.tagName === "IMG"
+    ) {
+      return;
     }
+
+    let ticketDescription = this.ticket.querySelector(".ticket-description");
+
+    if (!ticketDescription && !this.description) {
+      this.ticketService.get(this.id, (ticket) => {
+        this.description = ticket.description;
+
+        if (!this.description) return;
+
+        ticketDescription = document.createElement("p");
+        ticketDescription.classList.add("ticket-description", "active");
+        ticketDescription.textContent = this.description;
+        this.ticket.append(ticketDescription);
+      });
+    }
+
+    if (ticketDescription && this.description) {
+      ticketDescription.classList.toggle("active");
+    }
+  }
+
+  updateStatus() {
+    this.status = this.checkbox.checked;
+
+    this.ticketService.update(this.id, { status: this.status }, () => {
+      this.checkbox.checked = this.status;
+    });
   }
 }

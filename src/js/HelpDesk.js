@@ -2,7 +2,7 @@
  *  Основной класс приложения
  * */
 import TicketForm from "./TicketForm";
-import TicketView from "./TicketView";
+import Ticket from "./Ticket";
 
 export default class HelpDesk {
   constructor(container, ticketService) {
@@ -11,7 +11,6 @@ export default class HelpDesk {
     }
     this.container = container;
     this.ticketService = ticketService;
-    this.ticketView = new TicketView();
   }
 
   init() {
@@ -20,8 +19,16 @@ export default class HelpDesk {
     const ticketForm = new TicketForm("Добавить тикет");
     button.addEventListener("click", ticketForm.open);
 
-    this.ticketService.list((ticket) => {
-      this.ticketView.displayTickets(ticket);
+    this.ticketService.list((tickets) => {
+      tickets.forEach((ticket) => {
+        const ticketEl = new Ticket({
+          id: ticket.id,
+          name: ticket.name,
+          status: ticket.status,
+          created: ticket.created,
+        });
+        ticketEl.bindToDOM();
+      });
     });
   }
 }

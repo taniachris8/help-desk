@@ -1,0 +1,11 @@
+Images used in this project:
+
+1. Check Mark free icon
+   Source: https://www.flaticon.com/free-icon/check-mark_5291043
+   Author: Octopocto
+   License: Flaticon License, Free for personal and commercial purpose with attribution.
+
+2. Pencil free icon
+   Source: https://www.flaticon.com/free-icon/pencil_1828918
+   Author: Pixel perfect
+   License: Flaticon License, Free for personal and commercial purpose with attribution.
