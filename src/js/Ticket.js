@@ -38,7 +38,7 @@ export default class Ticket {
         <button class="delete-btn">&#x2716</button></div>
         </div>
         </div>
-        ${this.description ? `<p class="ticket-description">${this.description}</p>` : ""}
+        <p class="ticket-description">${this.description}</p>
         `;
 
     container.append(this.ticket);
@@ -48,6 +48,7 @@ export default class Ticket {
     this.ticket.addEventListener("click", this.displayDescription);
     this.checkbox = this.ticket.querySelector(".checkbox");
     this.checkbox.checked = this.status;
+    this.ticketDescription = this.ticket.querySelector(".ticket-description");
 
     this.editBtn.addEventListener("click", this.edit);
     this.deleteBtn.addEventListener("click", this.delete);
@@ -70,8 +71,15 @@ export default class Ticket {
     ticketForm.ticket = this;
     ticketForm.open();
 
-    ticketForm.input.value = this.name;
-    ticketForm.textarea.value = this.description;
+    if (!this.description) {
+      this.ticketService.get(this.id, (ticket) => {
+        ticketForm.input.value = ticket.name;
+        ticketForm.textarea.value = ticket.description;
+      });
+    } else {
+      ticketForm.input.value = this.name;
+      ticketForm.textarea.value = this.description;
+    }
   }
 
   delete() {
@@ -93,23 +101,15 @@ export default class Ticket {
       return;
     }
 
-    let ticketDescription = this.ticket.querySelector(".ticket-description");
-
-    if (!ticketDescription && !this.description) {
+    if (!this.description) {
       this.ticketService.get(this.id, (ticket) => {
+        if (!ticket.description) return;
         this.description = ticket.description;
-
-        if (!this.description) return;
-
-        ticketDescription = document.createElement("p");
-        ticketDescription.classList.add("ticket-description", "active");
-        ticketDescription.textContent = this.description;
-        this.ticket.append(ticketDescription);
+        this.ticketDescription.textContent = this.description;
+        this.ticketDescription.classList.toggle("active");
       });
-    }
-
-    if (ticketDescription && this.description) {
-      ticketDescription.classList.toggle("active");
+    } else {
+      this.ticketDescription.classList.toggle("active");
     }
   }
 

@@ -15,7 +15,7 @@ export default class TicketForm {
         <p class="form-title">${this.title}</p>
         <div class="form-content">
         <label class="form-label"> Краткое описание
-        <input class="form-input" type="text" name="short-description" required>
+        <input class="form-input" type="text" name="short-description">
         </label>
         <label class="form-label">Подробное описание
         <textarea class="form-textarea" name="detailed-description"></textarea>
@@ -32,19 +32,37 @@ export default class TicketForm {
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
     this.submit = this.submit.bind(this);
+    this.handleOutsideClick = this.handleOutsideClick.bind(this);
 
     const closeBtn = this.form.querySelector(".close-btn");
     closeBtn.addEventListener("click", this.close);
 
-    const submitBtn = this.form.querySelector(".submit-btn");
-    submitBtn.addEventListener("click", this.submit);
+    this.form.addEventListener("submit", this.submit);
 
     this.input = this.form.querySelector(".form-input");
     this.textarea = this.form.querySelector(".form-textarea");
+
+    this.input.addEventListener("input", () => {
+      if (this.input.classList.contains("invalid")) {
+        this.input.classList.remove("invalid");
+        this.input.placeholder = "";
+      }
+    });
   }
 
   open() {
     this.form.classList.add("active");
+    setTimeout(() => {
+      if (this.title !== "Удалить тикет") {
+        document.addEventListener("mousedown", this.handleOutsideClick);
+      }
+    }, 0);
+  }
+
+  handleOutsideClick(event) {
+    if (!this.form.contains(event.target)) {
+      this.close();
+    }
   }
 
   close() {
@@ -52,10 +70,12 @@ export default class TicketForm {
     this.form.classList.remove("active");
     this.input.classList.remove("invalid");
     this.input.placeholder = "";
+
+    document.removeEventListener("mousedown", this.handleOutsideClick);
   }
 
   submit(e) {
-    e.preventDefault(e);
+    e.preventDefault();
     const ticketService = new TicketService();
 
     if (this.title === "Добавить тикет") {
@@ -77,27 +97,37 @@ export default class TicketForm {
     } else if (this.title === "Изменить тикет") {
       const ticketData = {
         name: this.input.value.trim(),
-        description: this.textarea.value.trim(),
+        description: this.textarea.value,
       };
 
-      ticketService.update(this.ticket.id, ticketData, (updatedTicket) => {
-        if (updatedTicket && updatedTicket.id) {
-          this.ticket.name = updatedTicket.name;
-          this.ticket.description = updatedTicket.description;
-        } else {
-          this.ticket.name = ticketData.name;
-          this.ticket.description = ticketData.description;
-        }
+      if (ticketData.name) {
+        ticketService.update(this.ticket.id, ticketData, (updatedTicket) => {
+          if (updatedTicket && updatedTicket.id) {
+            this.ticket.name = updatedTicket.name;
+            this.ticket.description = updatedTicket.description;
+          } else {
+            this.ticket.name = ticketData.name;
+            this.ticket.description = ticketData.description;
+          }
 
-        const ticketEl = this.ticket.ticket;
-        if (ticketEl) {
-          ticketEl.querySelector(".ticket-name").textContent = this.ticket.name;
-          ticketEl.querySelector(".ticket-description").textContent =
-            this.ticket.description;
-        }
+          const ticketEl = this.ticket.ticket;
+          if (ticketEl) {
+            ticketEl.querySelector(".ticket-name").textContent =
+              this.ticket.name;
 
-        this.close();
-      });
+            ticketEl.querySelector(".ticket-description").textContent =
+              this.ticket.description;
+            ticketEl
+              .querySelector(".ticket-description")
+              .classList.remove("active");
+          }
+
+          this.close();
+        });
+      } else {
+        this.input.classList.add("invalid");
+        this.input.placeholder = "Поле обязательно к заполнению";
+      }
     } else if (this.title === "Удалить тикет") {
       ticketService.delete(this.ticket.id, () => {
         this.ticket.ticket.remove();
