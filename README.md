@@ -1,4 +1,4 @@
-# Credit Card Validator
+# Helpdesk
 
 ![CI](https://github.com/taniachris8/help-desk/actions/workflows/web.yml/badge.svg)
 
